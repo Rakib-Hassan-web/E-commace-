@@ -1,19 +1,23 @@
+
+
+
 // app/layout.js
+
+import Navbar from "./(e-commerce)/component/Navbar";
 import "./globals.css";
 import { Providers } from "@/app/Providers";
-import Navbar from "@/app/(e-commerce)/component/Navbar"; // Apnar banano Navbar
+
+export const metadata = {
+  title: "Admin Dashboard",
+  description: "E-commerce Admin Panel",
+};
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Providers>
-          {/* Main website-er navbar ekhane thakbe */}
-          <Navbar /> 
-          <main>
-            {children}
-          </main>
-        </Providers>
+        <Navbar/>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

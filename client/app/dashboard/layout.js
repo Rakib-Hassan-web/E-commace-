@@ -1,18 +1,19 @@
-"use client"
-// app/dashboard/layout.js
-// import { Sidnav } from "./(admin)/components/Navbar";
-import { ApiProvider } from '@reduxjs/toolkit/query/react';
-import { AdminAPI } from './services/api';
+import Sidebar from "./(admin)/components/Sidebar";
+import Navbar from "./(admin)/components/Navbar";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="flex">
-      {/* <Sidnav /> Ekhon sidebar shudhu dashboard-e dekhabe */}
-      <div className="flex-1 overflow-y-auto">
-        {/* <ApiProvider api={AdminAPI}> */}
+    <div className="flex min-h-screen bg-gray-100">
+      <div className="w-64 fixed left-0 top-0 h-full bg-white border-r">
+        <Sidebar />
+      </div>
 
-        {children}
-        {/* </ApiProvider> */}
+      <div className="flex-1 ml-64 flex flex-col">
+        <div className="sticky top-0 bg-white border-b z-50">
+          <Navbar />
+        </div>
+
+        <main className="p-5">{children}</main>
       </div>
     </div>
   );

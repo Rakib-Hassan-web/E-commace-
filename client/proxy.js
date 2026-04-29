@@ -8,11 +8,11 @@ export async function proxy(request) {
   console.log("pathname", pathname);
 
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/dashboard")) {
     const token = request.cookies.get("X-AS-Token")?.value;
 
     if (!token) {
-      return NextResponse.redirect(new URL("/signin", request.url));
+      return NextResponse.redirect(new URL("/Login", request.url));
     }
     console.log(SECRET);
 
@@ -22,14 +22,14 @@ export async function proxy(request) {
 
     
       if (!["admin", "editor"].includes(payload.role)) {
-        return NextResponse.redirect(new URL("/signin", request.url));
+        return NextResponse.redirect(new URL("/Login", request.url));
       }
 
      
       return NextResponse.next();
     } catch (err) {
       console.log(err);
-      return NextResponse.redirect(new URL("/signin", request.url));
+      return NextResponse.redirect(new URL("/Login", request.url));
     }
   }
 
@@ -37,5 +37,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/dashboard/:path*"],
 };

@@ -5,6 +5,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Link from "next/link";
 import Input from "@/utils/Input";
 import Button from "@/utils/Button";
+import toast, { Toaster } from 'react-hot-toast';
 
 const page = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,8 +50,8 @@ const page = () => {
       console.log(data);
 
       setTimeout(() => {
-        redirect("/");
-      }, 2000);
+        redirect("/dashboard");
+      }, 3000);
     } catch (error) {
       console.log(error);
     }
@@ -58,12 +59,14 @@ const page = () => {
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FBEBB5] to-[#F5D491]">
+     
       <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
          Login Here
         </h2>
 
         <form onSubmit={handelSubmit} className="space-y-5">
+           <Toaster />
           <Input
           onChange={(e) => {
               setUserData((prev) => ({ ...prev, email: e.target.value }));
