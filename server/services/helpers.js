@@ -16,7 +16,7 @@ const GenerateACCTkn=(user)=>{
     email:user.email,
     role:user.role
 
-}, process.env.JWT_SEC , { expiresIn: '1h' });
+}, process.env.JWT_SECRET , { expiresIn: '1h' });
 }
 
  // ----------refresh_token Generate---------------
@@ -28,7 +28,7 @@ const GenerateREFR_Tkn=(user)=>{
     email:user.email,
     role:user.role
 }
-, process.env.JWT_SEC , { expiresIn: '10d' });
+, process.env.JWT_SECRET , { expiresIn: '10d' });
 }
 // -----------------forget pass tkn-----------
 
@@ -49,7 +49,7 @@ const hashResetToken = (token) => {
 
 const verifyToken = (token) => {
   try {
-    var decoded = jwt.verify(token, process.env.JWT_SEC);
+    var decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (err) {
     return null;
@@ -63,7 +63,7 @@ const verifyToken = (token) => {
 // -----------------verify token------------------
 const verifytoken = (token)=>{
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SEC)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
     return decoded
   } catch (error) {
      return null
