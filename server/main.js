@@ -19,10 +19,10 @@ app.use(cookieParser())
 // Enable CORS for development and allow credentials (cookies)
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3001",
     credentials: true,
   })
-);
+)
 
 //------------- DB config---------
 DATABASE_URL()

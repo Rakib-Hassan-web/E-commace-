@@ -3,9 +3,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const AdminAPI = createApi({
-  reducerPath: "adminApi", 
+  reducerPath: "adminApi", // 🔥 MUST
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8000/", 
+    baseUrl: "http://localhost:8000/", // 🔥 শেষে / রাখো
     credentials: 'include',
   }),
   tagTypes: ["Categories"],
@@ -30,18 +30,7 @@ export const AdminAPI = createApi({
       }),
       invalidatesTags: ["Categories"],
     }),
-
-    creteNewProduct : builder.mutation({
-      query:(Prodata) =>({
-        url: "/product/create",
-        method:"POST",
-        headers: { "Content-Type": "multipart/form-data" },
-        body:Prodata,
-
-      })
-    })
-  
- }),
+  }),
 });
 
-export const { useGetProductQuery, useGetCategoriesQuery, useCreateCategoryMutation ,useCreteNewProductMutation} = AdminAPI;
+export const { useGetProductQuery, useGetCategoriesQuery, useCreateCategoryMutation } = AdminAPI;
