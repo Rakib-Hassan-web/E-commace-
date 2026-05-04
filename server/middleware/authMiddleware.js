@@ -14,7 +14,7 @@ const { verifytoken } = require("../services/helpers")
         next()
             
         } catch (error) {
-            res.status(500).send({message : "Internal Server Error"})
+            res.status(401).send({message : "Internal Server Error"})
         }
     }
   

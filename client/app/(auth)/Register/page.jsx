@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from "react";
 import { FiMail, FiUser, FiLock } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
@@ -6,11 +7,13 @@ import Link from "next/link";
 import Input from "@/utils/Input";
 import Button from "@/utils/Button";
 import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation"; // ✅ add this
+import { useRouter } from "next/navigation";
+import { registerUser } from "@/lib/authApi";
 
-const page = () => {
+const Page = () => {
+  const router = useRouter();
 
-  const router = useRouter(); // ✅ add this
+  const [showPassword, setShowPassword] = useState(false);
 
   const [errors, setErrors] = useState({
     nameErr: "",
@@ -27,68 +30,71 @@ const page = () => {
   const handelSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ frontend validation (important)
+    console.log("📤 Sending data:", userData); // 🔥 DEBUG
+
+    // frontend validation
     if (!userData.fullName || !userData.email || !userData.password) {
+      console.log("❌ Frontend validation failed");
+
       setErrors({
         nameErr: !userData.fullName ? "Full Name is required" : "",
         emailErr: !userData.email ? "Email is required" : "",
         passwordErr: !userData.password ? "Password is required" : "",
       });
+
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/auth/registration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
+      const { ok, status, body } = await registerUser(userData);
+      const data = body;
 
-      const data = await res.json();
+      console.log("📩 Backend response:", data);
+      console.log("📡 Status:", status);
 
-      if (!res.ok) {
-        // ✅ reset errors first
-        setErrors({
-          nameErr: "",
-          emailErr: "",
-          passwordErr: "",
-        });
-
-        if (data.message === "Full Name is required")
-          setErrors((prev) => ({ ...prev, nameErr: data.message }));
-
-        if (
-          data.message === "Email is required" ||
-          data.message === "Enter a valid email address" ||
-          data.message === "Email already exist"
-        )
-          setErrors((prev) => ({ ...prev, emailErr: data.message }));
-
-        if (data.message === "Password is required")
-          setErrors((prev) => ({ ...prev, passwordErr: data.message }));
-
+      if (!ok) {
+        toast.error(data.message || "Registration failed");
+        setErrors({ nameErr: "", emailErr: "", passwordErr: "" });
+        if (data.message?.toLowerCase().includes("name")) setErrors((prev) => ({ ...prev, nameErr: data.message }));
+        if (data.message?.toLowerCase().includes("email")) setErrors((prev) => ({ ...prev, emailErr: data.message }));
+        if (data.message?.toLowerCase().includes("password")) setErrors((prev) => ({ ...prev, passwordErr: data.message }));
         return;
       }
 
-      // ✅ success
-      toast.success(data.message);
+      // ✅ SUCCESS
+      try { window.localStorage.setItem("verifyEmail", userData.email); } catch (e) {}
+
+      const respData = data?.data || {};
+      if (respData.previewUrl) {
+        console.log("Preview URL:", respData.previewUrl);
+        toast.success("Verification email preview available (check console)");
+      }
+      // do NOT store OTP in localStorage — show once for dev convenience
+      if (respData.otp) {
+        console.log("Dev OTP:", respData.otp);
+        toast.success(`Dev OTP: ${respData.otp}`);
+      }
+      toast.success(data.message || "Registration Successful");
+
+      setUserData({ fullName: "", email: "", password: "" });
+      setErrors({ nameErr: "", emailErr: "", passwordErr: "" });
 
       setTimeout(() => {
-        router.push("/otp"); // 👉 OTP page redirect
-      }, 2000);
-
+        router.push("/verifyOTP");
+      }, 1200);
     } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
+      console.log("🔥 CATCH ERROR:", error);
+      toast.error("Server error. Please try again.");
     }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
-
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FBEBB5] to-[#F5D491]">
-      <Toaster />
+
+      <Toaster position="top-right" />
+
       <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
+
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
           Create Account
         </h2>
@@ -100,6 +106,7 @@ const page = () => {
               setUserData((prev) => ({ ...prev, fullName: e.target.value }));
               setErrors((prev) => ({ ...prev, nameErr: "" }));
             }}
+            value={userData.fullName}
             label="Username"
             placeholder="Enter your username"
             error={errors?.nameErr}
@@ -111,6 +118,7 @@ const page = () => {
               setUserData((prev) => ({ ...prev, email: e.target.value }));
               setErrors((prev) => ({ ...prev, emailErr: "" }));
             }}
+            value={userData.email}
             label="Email Address"
             type="email"
             placeholder="Enter your email"
@@ -123,6 +131,7 @@ const page = () => {
               setUserData((prev) => ({ ...prev, password: e.target.value }));
               setErrors((prev) => ({ ...prev, passwordErr: "" }));
             }}
+            value={userData.password}
             label="Password"
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
@@ -151,10 +160,11 @@ const page = () => {
               Login
             </Link>
           </p>
+
         </form>
       </div>
     </section>
   );
 };
 
-export default page;
+export default Page;

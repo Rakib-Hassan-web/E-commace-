@@ -178,26 +178,23 @@ const LoginUser = async( req,res)=> {
     const REF_TKN =  GenerateREFR_Tkn (user)
 
       
-    // cookie options: httpOnly on server, secure in production
-    const isProd = process.env.NODE_ENV === "production";
-    const accessCookieOptions = {
-      httpOnly: true,
-      secure: isProd,
-      maxAge: 3600000, // 1 hour
-      sameSite: isProd ? "none" : "lax",
-    };
-    const refreshCookieOptions = {
-      httpOnly: true,
-      secure: isProd,
-      maxAge: 864000000, // 10 days
-      sameSite: isProd ? "none" : "lax",
-    };
+      res.cookie( "X-AS-Token" ,ACC_TKN)
+      res.cookie( "X-RF-Token" ,REF_TKN)
 
-    res.cookie("X-AS-Token", ACC_TKN, accessCookieOptions);
-    res.cookie("X-RF-Token", REF_TKN, refreshCookieOptions);
+    res.cookie('X-AS-Token', ACC_TKN, {
+     httpOnly: false,
+     secure: false,   
+     maxAge:3600000
+     });
 
-    // include role in response so client can redirect appropriately
-    sendSuccess(res, "Login Successful", { role: user.role }, 200);
+      res.cookie('X-RF-Token', REF_TKN, {
+     httpOnly: false,
+     secure: false,   
+     maxAge:864000000
+     });
+
+
+ sendSuccess(res, "Login Successful", { role: user.role, email: user.email, _id: user._id }, 200);  
 
     
   } catch (error) {
@@ -311,14 +308,11 @@ const refreshAccessToken = async (req, res) => {
     const decoded = verifyToken(refreshToken)
     if(!decoded) return;
     const accessToken = GenerateACCTkn(decoded)
-    const isProd = process.env.NODE_ENV === "production";
-    res.cookie("X-AS-Token", accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      maxAge: 3600000,
-      sameSite: isProd ? "none" : "lax",
-    });
-    res.send({ message: "access token refreshed successfully" });
+    res.cookie('X-AS-Token', accessToken, {
+     httpOnly: false,
+     secure: false,   
+     maxAge:3600000
+     }).send({ message:"access token refreshed successfully"});
 
   } catch (error) {
 

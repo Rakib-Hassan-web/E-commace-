@@ -1,5 +1,6 @@
 var jwt = require('jsonwebtoken');
 const crypto = require("crypto");
+const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SEC;
 // ----------------otp Genarator----------------
 
 const generateOTP = () => {
@@ -16,7 +17,7 @@ const GenerateACCTkn=(user)=>{
     email:user.email,
     role:user.role
 
-}, process.env.JWT_SECRET , { expiresIn: '1h' });
+}, JWT_SECRET , { expiresIn: '1h' });
 }
 
  // ----------refresh_token Generate---------------
@@ -28,7 +29,7 @@ const GenerateREFR_Tkn=(user)=>{
     email:user.email,
     role:user.role
 }
-, process.env.JWT_SECRET , { expiresIn: '10d' });
+, JWT_SECRET , { expiresIn: '10d' });
 }
 // -----------------forget pass tkn-----------
 
@@ -49,7 +50,7 @@ const hashResetToken = (token) => {
 
 const verifyToken = (token) => {
   try {
-    var decoded = jwt.verify(token, process.env.JWT_SECRET);
+    var decoded = jwt.verify(token, JWT_SECRET);
     return decoded;
   } catch (err) {
     return null;
@@ -63,7 +64,7 @@ const verifyToken = (token) => {
 // -----------------verify token------------------
 const verifytoken = (token)=>{
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, JWT_SECRET)
     return decoded
   } catch (error) {
      return null

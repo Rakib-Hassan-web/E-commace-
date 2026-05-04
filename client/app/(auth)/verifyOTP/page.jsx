@@ -1,177 +1,158 @@
 'use client';
-import React, { useState } from "react";
-import { FiMail, FiUser, FiLock } from "react-icons/fi";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import Link from "next/link";
-import Input from "@/utils/Input";
-import Button from "@/utils/Button";
+
+import React, { useState, useRef, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { verifyOtp, resendOtp } from "@/lib/authApi";
 
-const page = () => {
+const OTPPage = () => {
+  const router = useRouter();
 
-  const [errors, setErrors] = useState({
-    nameErr: "",
-    emailErr: "",
-    passwordErr: "",
-  });
+  const [otp, setOtp] = useState(new Array(6).fill(""));
+  const [timeLeft, setTimeLeft] = useState(60);
+  const inputsRef = useRef([]);
 
-  const [userData, setUserData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-  });
+  // Handle input change
+  const handleChange = (element, index) => {
+    if (isNaN(element.value)) return;
 
-  const [showPassword, setShowPassword] = useState(false);
+    const newOtp = [...otp];
+    newOtp[index] = element.value;
+    setOtp(newOtp);
 
-  const handelSubmit = async (e) => {
-    e.preventDefault();
-
-    // -------------------Frontend validation
-    if (!userData.fullName || !userData.email || !userData.password) {
-      setErrors({
-        nameErr: !userData.fullName ? "Full Name is required" : "",
-        emailErr: !userData.email ? "Email is required" : "",
-        passwordErr: !userData.password ? "Password is required" : "",
-      });
-
-      toast.error("All fields are required");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:8000/auth/registration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await res.json();
-
-      console.log("STATUS:", res.status);
-      console.log("DATA:", data);
-
-      // --------------------SUCCESS
-      if (res.ok) {
-        toast.success(data?.message || "Registration Successful");
-
-        setTimeout(() => {
-          window.location.href = "/otp"; // redirect
-        }, 2000);
-      } 
-      //--------------- ERROR
-      else {
-        toast.error(data?.message || "Registration failed");
-
-        setErrors({
-          nameErr: "",
-          emailErr: "",
-          passwordErr: "",
-        });
-
-        if (data.message === "Full Name is required")
-          setErrors((prev) => ({ ...prev, nameErr: data.message }));
-
-        if (
-          data.message === "Email is required" ||
-          data.message === "Enter a valid email address" ||
-          data.message === "Email already exist"
-        )
-          setErrors((prev) => ({ ...prev, emailErr: data.message }));
-
-        if (data.message === "Password is required")
-          setErrors((prev) => ({ ...prev, passwordErr: data.message }));
-      }
-
-    } catch (error) {
-      console.log("FETCH ERROR:", error);
-      toast.error("Server connection failed");
+    // move to next input
+    if (element.nextSibling && element.value !== "") {
+      element.nextSibling.focus();
     }
   };
 
+  // Handle backspace
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputsRef.current[index - 1].focus();
+    }
+  };
+
+  // Timer
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  // Submit OTP
+  const handleSubmit = () => {
+    const finalOtp = otp.join("");
+
+    if (finalOtp.length < 6) {
+      return toast.error("Enter complete OTP");
+    }
+
+    // 🔥 API call here
+    const email = window.localStorage.getItem("verifyEmail");
+    if (!email) return toast.error("Email not found. Please register again.");
+
+    (async () => {
+      try {
+        const { ok, status, body } = await verifyOtp({ email, otp: finalOtp });
+        const data = body;
+        if (!ok) return toast.error(data.message || "OTP verification failed");
+        toast.success(data.message || "OTP Verified Successfully");
+        setTimeout(() => {
+          router.push("/Login");
+        }, 1200);
+      } catch (err) {
+        console.error(err);
+        toast.error("Server error. Try again later.");
+      }
+    })();
+  };
+
+  // Resend OTP
+  const handleResend = () => {
+    const email = window.localStorage.getItem("verifyEmail");
+    if (!email) return toast.error("Email not found. Please register again.");
+
+    (async () => {
+      try {
+        const { ok, status, body } = await resendOtp({ email });
+        const data = body;
+        if (!ok) return toast.error(data.message || "Failed to resend OTP");
+        toast.success(data.message || "OTP Resent!");
+        setTimeLeft(60);
+      } catch (err) {
+        console.error(err);
+        toast.error("Server error. Try again later.");
+      }
+    })();
+  };
+
+  // read email from storage for display
+  const [email, setEmail] = useState("");
+  useEffect(() => {
+    try {
+      const e = window.localStorage.getItem("verifyEmail");
+      if (e) setEmail(e);
+    } catch (e) {}
+  }, []);
+
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FBEBB5] to-[#F5D491]">
-      
-      {/* ---------------Toaster must be here */}
-      <Toaster position="top-center" reverseOrder={false} />
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-100 to-yellow-300">
 
-      <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Create Account 
+      <Toaster position="top-right" />
+
+      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md text-center">
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">
+          Verify OTP
         </h2>
+        <p className="text-gray-500 mb-6">
+          Enter the 6-digit code sent to your email
+        </p>
 
-        <form onSubmit={handelSubmit} className="space-y-5">
+        {/* OTP Inputs */}
+        <div className="flex justify-between gap-2 mb-6">
+          {otp.map((data, index) => (
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              value={data}
+              ref={(el) => (inputsRef.current[index] = el)}
+              onChange={(e) => handleChange(e.target, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              className="w-12 h-12 text-center text-xl border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
+          ))}
+        </div>
 
-          {/* ---------Username ---------*/}
-          <Input
-            onChange={(e) => {
-              setUserData((prev) => ({ ...prev, fullName: e.target.value }));
-              setErrors((prev) => ({ ...prev, nameErr: "" }));
-            }}
-            label="Username"
-            placeholder="Enter your username"
-            error={errors?.nameErr}
-            prefix={<FiUser className="text-gray-500" />}
-          />
+        {/* Verify Button */}
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-yellow-400 text-gray-900 font-semibold py-2 rounded-lg hover:bg-yellow-500 transition"
+        >
+          Verify OTP
+        </button>
 
-          {/* -------------Email -------------*/}
-          <Input
-            onChange={(e) => {
-              setUserData((prev) => ({ ...prev, email: e.target.value }));
-              setErrors((prev) => ({ ...prev, emailErr: "" }));
-            }}
-            label="Email Address"
-            type="email"
-            placeholder="Enter your email"
-            error={errors?.emailErr}
-            prefix={<FiMail className="text-gray-500" />}
-          />
-
-          {/*--------------- Password ----------*/}
-          <Input
-            onChange={(e) => {
-              setUserData((prev) => ({ ...prev, password: e.target.value }));
-              setErrors((prev) => ({ ...prev, passwordErr: "" }));
-            }}
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-            error={errors?.passwordErr}
-            prefix={<FiLock className="text-gray-500" />}
-            suffix={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-500"
-              >
-                {showPassword ? (
-                  <AiOutlineEyeInvisible className="text-xl" />
-                ) : (
-                  <AiOutlineEye className="text-xl" />
-                )}
-              </button>
-            }
-          />
-
-          {/* Button */}
-          <Button
-            type="submit"
-            className="w-full bg-yellow-400 text-gray-900 font-semibold py-2 rounded-xl hover:bg-yellow-500 transition"
-          >
-            Register
-          </Button>
-
-          {/* Login Link */}
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link href="/Login" className="font-semibold text-yellow-500 hover:underline">
-              Login
-            </Link>
-          </p>
-
-        </form>
+        {/* Timer & Resend */}
+        <div className="mt-4 text-sm text-gray-600">
+          {timeLeft > 0 ? (
+            <p>Resend OTP in {timeLeft}s</p>
+          ) : (
+            <button
+              onClick={handleResend}
+              className="text-yellow-600 font-semibold hover:underline"
+            >
+              Resend OTP
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );
 };
 
-export default page;
+export default OTPPage;

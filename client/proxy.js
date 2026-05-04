@@ -1,41 +1,34 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
+  console.log("pathname", pathname);
+
 
   if (pathname.startsWith("/dashboard")) {
     const token = request.cookies.get("X-AS-Token")?.value;
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[middleware] checking dashboard access", { pathname, tokenPresent: !!token });
-    }
-
     if (!token) {
       return NextResponse.redirect(new URL("/Login", request.url));
     }
-
-    if (!JWT_SECRET) {
-      console.warn("JWT_SECRET is not defined in environment.");
-      return NextResponse.redirect(new URL("/Login", request.url));
-    }
+    console.log(SECRET);
 
     try {
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
+     
+      const { payload } = await jwtVerify(token, SECRET);
 
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[middleware] verified token role:", payload.role);
-      }
-
+    
       if (!["admin", "editor"].includes(payload.role)) {
         return NextResponse.redirect(new URL("/Login", request.url));
       }
 
+     
       return NextResponse.next();
     } catch (err) {
-      console.error("JWT verification failed:", err);
+      console.log(err);
       return NextResponse.redirect(new URL("/Login", request.url));
     }
   }

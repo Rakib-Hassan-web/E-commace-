@@ -64,6 +64,9 @@ const Page = () => {
       const userRole = data?.data?.role;
       if (userRole && userRole !== "admin") {
         toast.error("You are not authorized to access the admin panel");
+         setTimeout(() => {
+          router.push("/");
+        }, 1200);
         return;
       }
 
@@ -72,7 +75,7 @@ const Page = () => {
       if (userRole === "admin") {
         setTimeout(() => {
           router.push("/dashboard");
-        }, 1200);
+        }, 2000);
       }
 
     } catch (error) {

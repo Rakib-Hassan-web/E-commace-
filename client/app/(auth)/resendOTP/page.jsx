@@ -1,105 +1,104 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { FiMail } from "react-icons/fi";
 
-export default function OTPVerifyPage() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
-  const inputsRef = useRef([]);
+const ResendOTPPage = () => {
+  const [email, setEmail] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  // ⏳ Timer logic
+  // countdown timer
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setCanResend(true);
-    }
-  }, [timer]);
+    if (timeLeft <= 0) return;
 
-  const handleChange = (value, index) => {
-    if (!/^[0-9]*$/.test(value)) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
 
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
-    if (value && index < 5) {
-      inputsRef.current[index + 1].focus();
-    }
-  };
-
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1].focus();
-    }
-  };
-
-  const handleSubmit = () => {
-    const finalOtp = otp.join("");
-    if (finalOtp.length < 6) {
-      alert("Please enter full OTP");
-      return;
+  // resend OTP
+  const handleResend = async () => {
+    if (!email) {
+      return toast.error("Email is required");
     }
 
-    console.log("OTP:", finalOtp);
-    // 👉 Verify API call here
-  };
+    try {
+      const res = await fetch("http://localhost:8000/auth/resend-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-  const handleResend = () => {
-    if (!canResend) return;
+      const data = await res.json();
 
-    console.log("Resend OTP called");
-    // 👉 Resend API call here
+      if (!res.ok) {
+        return toast.error(data.message || "Failed to resend OTP");
+      }
 
-    setTimer(30);
-    setCanResend(false);
+      toast.success("OTP sent successfully!");
+
+      // start timer (60 sec)
+      setTimeLeft(60);
+
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong!");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-[350px] text-center">
-        <h1 className="text-2xl font-bold mb-2">Verify OTP</h1>
-        <p className="text-gray-500 mb-6">Enter the 6-digit code sent to your email</p>
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-100 to-yellow-300">
 
-        <div className="flex justify-between mb-6">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              type="text"
-              maxLength="1"
-              value={digit}
-              ref={(el) => (inputsRef.current[index] = el)}
-              onChange={(e) => handleChange(e.target.value, index)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              className="w-12 h-12 text-center border rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          ))}
+      <Toaster position="top-right" />
+
+      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+
+        <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
+          Resend OTP
+        </h2>
+
+        <p className="text-center text-gray-500 mb-6">
+          Enter your email to receive a new OTP
+        </p>
+
+        {/* Email Input */}
+        <div className="flex items-center border rounded-lg px-3 py-2 mb-4 focus-within:ring-2 focus-within:ring-yellow-400">
+          <FiMail className="text-gray-500 mr-2" />
+          <input
+            type="email"
+            placeholder="Enter your email"
+            className="w-full outline-none bg-transparent"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
+        {/* Button */}
         <button
-          onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          onClick={handleResend}
+          disabled={timeLeft > 0}
+          className={`w-full font-semibold py-2 rounded-lg transition ${
+            timeLeft > 0
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+          }`}
         >
-          Verify
+          {timeLeft > 0 ? `Wait ${timeLeft}s` : "Resend OTP"}
         </button>
 
-        <div className="mt-4 text-sm">
-          {canResend ? (
-            <button
-              onClick={handleResend}
-              className="text-blue-600 hover:underline"
-            >
-              Resend OTP
-            </button>
-          ) : (
-            <p className="text-gray-500">Resend OTP in {timer}s</p>
-          )}
-        </div>
+        {/* Info */}
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Didn’t receive OTP? Check spam folder
+        </p>
+
       </div>
-    </div>
+    </section>
   );
-}
+};
+
+export default ResendOTPPage;
