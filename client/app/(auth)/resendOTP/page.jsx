@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { FiMail } from "react-icons/fi";
+import fetchWithRefresh from "@/utils/fetchWithRefresh";
 
 const ResendOTPPage = () => {
   const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ const ResendOTPPage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/auth/resend-otp", {
+      const res = await fetchWithRefresh("/api/auth/resendotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

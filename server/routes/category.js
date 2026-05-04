@@ -11,6 +11,6 @@ const upload = multer()
 routee.post("/create", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), createNewCategory
 )
 
-routee.get("/all", GetAllCategories)
+routee.get("/all",authMiddleware, GetAllCategories)
 
 module.exports = routee

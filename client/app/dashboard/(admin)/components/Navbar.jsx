@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 export default function Navbar({ adminName = "Admin", onToggleSidebar }) {
   const router = useRouter();
 
-  const handleLogout = () => {
-    try {
-      // localStorage.removeItem('token') // example
-    } catch (e) {}
-    router.push("/");
-  };
+const handleLogout = () => {
+  document.cookie.split(";").forEach((c) => {
+    document.cookie =
+      c.trim().split("=")[0] +
+      "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+  });
 
+  router.push("/");
+};
   return (
     <header className="bg-white border-b">
       <div className="flex items-center justify-between h-16 px-6">

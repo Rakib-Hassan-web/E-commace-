@@ -9,7 +9,7 @@ export async function proxy(request) {
 
 
   if (pathname.startsWith("/dashboard")) {
-    const token = request.cookies.get("X-AS-Token")?.value;
+    const token = request.cookies.get("X-RF-Token")?.value;
 
     if (!token) {
       return NextResponse.redirect(new URL("/Login", request.url));
