@@ -36,7 +36,7 @@ const Banner = () => {
 
           <div className="mt-6 md:mt-[43px] flex justify-center md:justify-start">
             <Link
-              href="#"
+              href="/product"
               className="py-[12px] sm:py-[15px] px-[30px] sm:px-[43px] bg-pink rounded-[5px] text-white font-lato font-medium text-sm sm:text-base hover:bg-[#2F1AC4] duration-300"
             >
               Shop Now

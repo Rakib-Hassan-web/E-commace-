@@ -6,10 +6,10 @@ import Navbar from "../components/Navbar";
 import { useGetCategoriesQuery, useCreateCategoryMutation } from '@/app/dashboard/services/api'
 
 export default function CategoriesPage() {
-  const { data: fetchedCategories = [], isLoading: isFetching, error: fetchError } = useGetCategoriesQuery()
+  const { data: fetchedCategories = [], refetch, isLoading: isFetching, error: fetchError } = useGetCategoriesQuery()
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation()
 
-  // local UI copy so edits/deletes can be immediate in the admin UI
+
   const [categories, setCategories] = useState([])
 
   const [showAdd, setShowAdd] = useState(false);

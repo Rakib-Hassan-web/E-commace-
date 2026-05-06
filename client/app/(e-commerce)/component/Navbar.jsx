@@ -34,7 +34,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Products", href: "/shop" },
+    { name: "Shop", href: "/product" },
     { name: "Blog", href: "/blog" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/Contact" },
@@ -69,7 +69,7 @@ const Navbar = () => {
         {/* ----- Desktop Menu ----- */}
         <ul className="hidden md:flex gap-6">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
             return (
               <li key={item.name}>
                 <Link href={item.href} passHref>
@@ -116,7 +116,7 @@ const Navbar = () => {
           {navItems.map((item) => (
             <li key={item.name} onClick={() => setMenuOpen(false)}>
               <Link href={item.href} passHref>
-                <span className={`block font-semibold py-2 ${pathname === item.href ? "text-[#FB2E86]" : "text-[#0D0E43]"}`}>
+                <span className={`block font-semibold py-2 ${pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href)) ? "text-[#FB2E86]" : "text-[#0D0E43]"}`}>
                   {item.name}
                 </span>
               </Link>

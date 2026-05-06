@@ -8,8 +8,6 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
 });
 
-
-
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
@@ -32,19 +30,19 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   return result;
 };
 
-
 export const AdminAPI = createApi({
-  reducerPath: "adminApi", // 🔥 MUST
+  reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Categories"],
+  tagTypes:["product" ,"Categories" ,],
+  
   endpoints: (builder) => ({
     getProduct: builder.query({
       query: () => "product/allProducts",
       transformResponse: (response) => {
-        // server responses use { success, message, data }
-        // normalize to return array of products directly
         return response?.data?.product || response?.product || []
-      }
+      },
+    providesTags:["product"]
+ 
     }),
     getCategories: builder.query({
       query: () => "category/all",
@@ -56,7 +54,7 @@ export const AdminAPI = createApi({
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["Categories"],
+      providesTags:["Categories"]
     }),
     createProduct: builder.mutation({
     query: (formData) => ({
@@ -64,6 +62,7 @@ export const AdminAPI = createApi({
     method: "POST",
     body: formData,
   }),
+  providesTags:["product"]
 }),
   }),
 });
