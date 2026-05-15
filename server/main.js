@@ -19,7 +19,10 @@ app.use(cookieParser())
 // Enable CORS for development and allow credentials (cookies)
 // Allow requests from the client app(s). Use env or allow common dev ports.
 const allowedClientOrigins = [
-
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+].filter(Boolean);
 
 app.use(
   cors({
