@@ -14,14 +14,14 @@ const Footer = () => {
         {/* Brand / Newsletter */}
         <div className="md:w-1/4 pt-20">
           <h2 className="text-2xl text-[38px] font-normal font-adaminaaa text-black  mb-4">Hekto</h2>
-          <div className="flex">
+          <div className="flex gap-2">
             <Input
               type="email"
               placeholder="Enter Email Address"
               className="max-w-[250px]"
               inputClassName="rounded-l-md border-none"
             />
-            <Button className="rounded-r-md px-4">
+            <Button className="rounded-r-md w-[100px]">
               Sign Up
             </Button>
           </div>

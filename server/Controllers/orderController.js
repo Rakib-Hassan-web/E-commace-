@@ -9,6 +9,10 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // --------------ckeckout-----------------------
 const checkOut = async (req, res) => {
+
+
+
+
   try {
     const { cartID, shippingAddress, paymentMethod } = req.body;
     const OrderNum = `RHA-${Date.now()}`;

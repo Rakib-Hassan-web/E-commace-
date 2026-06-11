@@ -169,7 +169,11 @@ const LoginUser = async( req,res)=> {
 
  const user = await userSchema.findOne({email})
 
-   if (!user) return sendError(res, "User Not Registered", 400);     
+   if (!user) return sendError(res, "User Not Registered", 400);    
+   
+    
+
+
     const Pass_Match = await user.comparePassword(password)
 
     if (!Pass_Match) return  sendError(res, "Wrong Password", 400);   

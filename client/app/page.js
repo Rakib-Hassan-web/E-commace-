@@ -3,6 +3,7 @@ import Navbar from './(e-commerce)/component/Navbar'
 import Banner from './(e-commerce)/component/Banner'
 import FeaturedProducts from './(e-commerce)/component/FeaturedProducts'
 import LeatestProducts from './(e-commerce)/component/LeatestProducts'
+import AllProducts from './(e-commerce)/component/AllProducts'
 import Offer from './(e-commerce)/component/Offer'
 import UniqueProduct from './(e-commerce)/component/UniqueProduct'
 import TreandingProduct from './(e-commerce)/component/TreandingProduct'
@@ -21,13 +22,14 @@ const page = () => {
 
 
     <Banner/>
-    <FeaturedProducts/>
-    <LeatestProducts/>
+    <AllProducts />
+    {/* <FeaturedProducts/> */}
+    {/* <LeatestProducts/> */}
     <Offer/>
     <UniqueProduct/>
-    <TreandingProduct/>
-    <Discount/>
-    <Topcategorys/>
+    {/* <TreandingProduct/> */}
+    {/* <Discount/> */}
+    {/* <Topcategorys/> */}
     <Subscribe/>
     <Blog/>
     <Footer/>

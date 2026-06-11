@@ -25,7 +25,7 @@ const Subscribe = () => {
         {/* Button */}
         <div className='mt-7'>
           <Link
-            href='#'
+            href="/product"
             className='py-3 px-8 sm:py-4 sm:px-12 bg-pink rounded-md text-white font-lato font-medium text-base sm:text-lg hover:bg-[#2F1AC4] transition-colors duration-300'
           >
             Shop Now

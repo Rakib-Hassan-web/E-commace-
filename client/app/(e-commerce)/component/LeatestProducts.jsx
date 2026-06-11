@@ -1,9 +1,9 @@
 "use client"
 import Link from 'next/link'
 import React from 'react'
-import { AiOutlineShoppingCart } from "react-icons/ai";
 import { GiSelfLove } from "react-icons/gi";
 import { useGetProductQuery } from '@/app/dashboard/services/api'
+import CartIconButton from './CartIconButton'
 
 const LeatestProducts = () => {
   const { data, error, isLoading } = useGetProductQuery()
@@ -49,9 +49,7 @@ const LeatestProducts = () => {
 
                   {/* Hover icons */}
                   <div className="absolute top-6 left-4 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition duration-300">
-                    <button className="bg-white p-2 rounded-full shadow hover:bg-[#FB2448] hover:text-white duration-300">
-                      <AiOutlineShoppingCart />
-                    </button>
+                    <CartIconButton product={p} />
                     <button className="bg-white p-2 rounded-full shadow hover:bg-[#FB2448] hover:text-white duration-300">
                       <GiSelfLove />
                     </button>

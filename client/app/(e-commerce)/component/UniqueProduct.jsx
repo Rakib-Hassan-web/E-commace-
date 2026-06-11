@@ -54,10 +54,10 @@ const UniqueProduct = () => {
               {/* ---------button + price section---------- */}
               <div className='flex flex-col sm:flex-row gap-6 sm:gap-10 items-start sm:items-center mt-10'>
                 <Link
-                  href={'#'}
+                  href="/product"
                   className='py-[12px] px-[35px] sm:py-[15px] sm:px-[43px] bg-pink rounded-[5px] text-white font-adaminaaa font-medium text-sm sm:text-base hover:bg-[#2F1AC4] duration-300'
                 >
-                  Add To Cart
+                  View in shop Page
                 </Link>
 
                 <div className='flex flex-col'>

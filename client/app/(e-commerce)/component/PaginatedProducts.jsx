@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/apiClient";
+import AddToCartButton from "@/app/(e-commerce)/component/AddToCartButton";
 
 export default function PaginatedProducts({ initialPage = 1, limit = 4 }) {
   const [page, setPage] = useState(initialPage);
@@ -41,15 +42,20 @@ export default function PaginatedProducts({ initialPage = 1, limit = 4 }) {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((prod) => (
-              <Link key={prod._id || prod.slug} href={`/product/${prod.slug}`} className="group block">
-                <div className="w-full h-auto shadow-[0px_4px_30px_0px_rgba(31,_38,_135,_0.15)] rounded-md p-3 group-hover:bg-[#2F1AC4] group-hover:text-white">
-                  <div className="w-full h-[200px] bg-gray-100 flex items-center justify-center rounded-md">
-                    <img src={prod.thumbnail || "/placeholder.png"} alt={prod.title} className="object-contain max-h-[180px]" />
+              <div key={prod._id || prod.slug} className="group block">
+                <Link href={`/product/${prod.slug}`}>
+                  <div className="w-full h-auto shadow-[0px_4px_30px_0px_rgba(31,_38,_135,_0.15)] rounded-md p-3 group-hover:bg-[#2F1AC4] group-hover:text-white cursor-pointer">
+                    <div className="w-full h-[200px] bg-gray-100 flex items-center justify-center rounded-md">
+                      <img src={prod.thumbnail || "/placeholder.png"} alt={prod.title} className="object-contain max-h-[180px]" />
+                    </div>
+                    <h3 className="mt-4 text-center font-bold text-pink group-hover:text-white">{prod.title}</h3>
+                    <p className="text-center mt-2 font-semibold text-[#151875] group-hover:text-white">${prod.price}</p>
                   </div>
-                  <h3 className="mt-4 text-center font-bold text-pink group-hover:text-white">{prod.title}</h3>
-                  <p className="text-center mt-2 font-semibold text-[#151875] group-hover:text-white">${prod.price}</p>
+                </Link>
+                <div className="mt-2 flex justify-center">
+                  <AddToCartButton product={prod} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

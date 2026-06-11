@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { apiClient } from "@/lib/apiClient";
 import PaginatedProducts from "@/app/(e-commerce)/component/PaginatedProducts";
+import AddToCartButton from "@/app/(e-commerce)/component/AddToCartButton";
 
 const ProductPage = async ({ params }) => {
   const { slug } = params;
@@ -55,6 +56,9 @@ const ProductPage = async ({ params }) => {
         <div className="w-full md:w-1/2">
           <h1 className="text-2xl font-semibold text-[#1A0B5B]">{product.title}</h1>
           <p className="text-lg font-bold text-pink mt-3">${product.price}</p>
+          <div className="mt-4">
+            <AddToCartButton product={product} />
+          </div>
           <p className="text-sm text-gray-600 mt-4">{product.description}</p>
 
           <div className="mt-6">
