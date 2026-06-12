@@ -21,6 +21,7 @@ const {
 // -----------registration--------------
 const RegisterUSer = async (req, res) => {
   try {
+
     const {
       fullName,
       email,
@@ -28,43 +29,64 @@ const RegisterUSer = async (req, res) => {
       phone
     } = req.body;
 
-    if (!fullName) return sendError(res, "fullName is Required", 400);  
-    if (!email) return sendError(res, "email is Required", 400);       
-    if (!isValidEmail(email)) return sendError(res, "Invalid Email", 400);   
-    if (!password) return  sendError(res, "password is Required", 400);  
-    if (!isValidPassword(password)) return   sendError(res, "Invalid Password", 400);   
-    const existinguser = await userSchema.findOne({
-      email
-    });
-    if (existinguser) return sendError(res, "User Already Exists", 400);    
+
+    if (!fullName) return sendError(res, "fullName is Required", 400);
+    if (!email) return sendError(res, "email is Required", 400);
+    if (!isValidEmail(email)) return sendError(res, "Invalid Email", 400);
+    if (!password) return sendError(res, "password is Required", 400);
+    if (!isValidPassword(password)) return sendError(res, "Invalid Password", 400);
+
+
+    const existinguser = await userSchema.findOne({email});
+
+    if (existinguser) {
+      return sendError(res, "User Already Exists", 400);
+    }
+
 
     const otp = generateOTP();
 
+
+    // আগে email যাবে
+    await sendEmail({
+      email,
+      subject:"Email Verification",
+      otp,
+      template: emailtemplate,
+    });
+
+
+
+    // email success হলে user save হবে
     const newUser = new userSchema({
       fullName,
       email,
       password,
       phone,
       otp,
-      otpExpires: new Date(Date.now() + 2 * 60 * 1000),
+      otpExpires: new Date(Date.now()+2*60*1000)
     });
+
 
     await newUser.save();
 
-    await sendEmail({
-      email,
-      subject: "Email Verification",
-      otp,
-      template: emailtemplate,
 
-    });
-    sendSuccess(res, "User Registered Successfully", 201);
+    return sendSuccess(
+      res,
+      "User Registered Successfully",
+      201
+    );
 
-   
 
-  } catch (error) {
-   
-   sendError(res, "Server error", 500);
+  } catch(error) {
+
+    console.log(error);
+
+    return sendError(
+      res,
+      "Server error",
+      500
+    );
 
   }
 };
@@ -174,31 +196,40 @@ const LoginUser = async( req,res)=> {
     
 
 
-    const Pass_Match = await user.comparePassword(password)
+    const Pass_Match = await user.comparePassword(password);
 
-    if (!Pass_Match) return  sendError(res, "Wrong Password", 400);   
-    if (!user.isverified) return sendError(res, "User Not Verified", 400);  
-    const ACC_TKN =  GenerateACCTkn(user)
-    const REF_TKN =  GenerateREFR_Tkn (user)
+    if (!Pass_Match) return sendError(res, "Wrong Password", 400);
 
-      
-      res.cookie( "X-AS-Token" ,ACC_TKN)
-      res.cookie( "X-RF-Token" ,REF_TKN)
+    // Allow admin accounts (seeded/manual) to login even if not email-verified
+    if (!user.isverified && user.role !== "admin")
+      return sendError(res, "User Not Verified", 400);
 
-    res.cookie('X-AS-Token', ACC_TKN, {
-     httpOnly: false,
-     secure: false,   
-     maxAge:3600000
-     });
+    const ACC_TKN = GenerateACCTkn(user);
+    const REF_TKN = GenerateREFR_Tkn(user);
 
-      res.cookie('X-RF-Token', REF_TKN, {
-     httpOnly: false,
-     secure: false,   
-     maxAge:864000000
-     });
+    const isProd = process.env.NODE_ENV === "production";
+    const accessCookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 3600000,
+      sameSite: isProd ? "none" : "lax",
+    };
+    const refreshCookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 864000000,
+      sameSite: isProd ? "none" : "lax",
+    };
 
+    res.cookie("X-AS-Token", ACC_TKN, accessCookieOptions);
+    res.cookie("X-RF-Token", REF_TKN, refreshCookieOptions);
 
- sendSuccess(res, "Login Successful", { role: user.role, email: user.email, _id: user._id }, 200);  
+    sendSuccess(
+      res,
+      "Login Successful",
+      { role: user.role, email: user.email, _id: user._id },
+      200
+    );
 
     
   } catch (error) {

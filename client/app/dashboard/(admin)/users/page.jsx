@@ -3,15 +3,11 @@
 import React from "react";
 import Sidebar from "../../..//dashboard/(admin)/components/Sidebar";
 import Navbar from "../../../dashboard/(admin)/components/Navbar";
+import { useGetUsersQuery } from "@/app/dashboard/services/api";
 
 export default function UsersPage() {
-
-  const users = [
-    { id: "USR-1001", name: "Alice Johnson", email: "alice@example.com", role: "Customer", joined: "2025-11-05" },
-    { id: "USR-1002", name: "Mark Peterson", email: "mark@example.com", role: "Customer", joined: "2026-01-12" },
-    { id: "USR-1003", name: "Lucy Smith", email: "lucy@example.com", role: "Seller", joined: "2024-09-30" },
-    { id: "USR-1004", name: "John Williams", email: "john@example.com", role: "Admin", joined: "2023-07-18" },
-  ];
+  const { data: usersData, error, isLoading } = useGetUsersQuery();
+  const users = Array.isArray(usersData) ? usersData : usersData?.users || [];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -46,13 +42,25 @@ export default function UsersPage() {
                   </thead>
 
                   <tbody className="bg-white divide-y divide-gray-100">
+                    {isLoading && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">Loading users...</td>
+                      </tr>
+                    )}
+
+                    {error && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-red-500">Failed to load users</td>
+                      </tr>
+                    )}
+
                     {users.map((u) => (
-                      <tr key={u.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-700">{u.id}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{u.name}</td>
+                      <tr key={u._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-700">{u._id}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{u.fullName || u.name || "—"}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{u.email}</td>
                         <td className="px-4 py-3 text-sm text-gray-700">{u.role}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{u.joined}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
                         <td className="px-4 py-3 text-sm text-right">
                           <button className="text-indigo-600 hover:underline mr-3">Edit</button>
                           <button className="text-red-600 hover:underline">Remove</button>

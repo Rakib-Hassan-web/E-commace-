@@ -8,21 +8,23 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
 });
 
+
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
+
     const refreshResult = await baseQuery(
       {
         url: "/auth/refreshaccesstoken",
         method: "POST",
       },
       api,
-      extraOptions,
+      extraOptions
     );
 
+
     if (refreshResult.data) {
-      // retry original request
       result = await baseQuery(args, api, extraOptions);
     }
   }
@@ -30,63 +32,160 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   return result;
 };
 
+
+
 export const AdminAPI = createApi({
   reducerPath: "adminApi",
+
   baseQuery: baseQueryWithReauth,
-  tagTypes:["product", "Categories"],
-  
+
+  tagTypes: [
+    "product",
+    "Categories",
+    "Users"
+  ],
+
+
   endpoints: (builder) => ({
+
+
+
+    // ================= PRODUCT =================
+
     getProduct: builder.query({
+
       query: () => "product/allProducts",
+
       transformResponse: (response) => {
-        return response?.data?.product || response?.product || []
+        return response?.data?.product || response?.product || [];
       },
-    providesTags:["product"]
- 
+
+      providesTags:["product"]
+
     }),
-    getCategories: builder.query({
-      query: () => "category/all",
-      providesTags: ["Categories"],
-    }),
-    createCategory: builder.mutation({
+
+
+
+    createProduct: builder.mutation({
+
       query: (formData) => ({
-        url: "category/create",
+        url: "product/create",
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["Categories"],
+
+      invalidatesTags:["product"]
+
     }),
+
+
+
+
+
+    // ================= USERS =================
+
+
+    getUsers: builder.query({
+
+      query: () => "users/allUsers",
+
+      transformResponse: (response) => {
+        return response?.data?.users || response?.users || [];
+      },
+
+      providesTags:["Users"]
+
+    }),
+
+
+
+
+
+
+    // ================= CATEGORY =================
+
+
+    getCategories: builder.query({
+
+      query: () => "category/all",
+
+      providesTags:["Categories"],
+
+    }),
+
+
+
+    createCategory: builder.mutation({
+
+      query: (formData) => ({
+        url:"category/create",
+        method:"POST",
+        body:formData,
+      }),
+
+      invalidatesTags:["Categories"]
+
+    }),
+
+
+
+
     updateCategory: builder.mutation({
-      query: ({ id, formData }) => ({
-        url: `category/${id}/update`,
-        method: "PATCH",
-        body: formData,
+
+      query: ({id, formData}) => ({
+
+        url:`category/${id}/update`,
+        method:"PATCH",
+        body:formData,
+
       }),
-      invalidatesTags: ["Categories"],
+
+      invalidatesTags:["Categories"]
+
     }),
+
+
+
+
     deleteCategory: builder.mutation({
-      query: (id) => ({
-        url: `category/${id}/delete`,
-        method: "DELETE",
+
+      query:(id)=>({
+
+        url:`category/${id}/delete`,
+        method:"DELETE",
+
       }),
-      invalidatesTags: ["Categories"],
+
+      invalidatesTags:["Categories"]
+
     }),
-    createProduct: builder.mutation({
-    query: (formData) => ({
-    url: "product/create",
-    method: "POST",
-    body: formData,
+
+
   }),
-  providesTags:["product"]
-}),
-  }),
+
+
 });
 
+
+
+
+// hooks export
+
 export const {
+
   useGetProductQuery,
-  useGetCategoriesQuery,
-  useCreateCategoryMutation,
-  useUpdateCategoryMutation,
-  useDeleteCategoryMutation,
+
   useCreateProductMutation,
+
+  useGetUsersQuery,
+
+  useGetCategoriesQuery,
+
+  useCreateCategoryMutation,
+
+  useUpdateCategoryMutation,
+
+  useDeleteCategoryMutation,
+
+
 } = AdminAPI;
