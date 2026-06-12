@@ -1,5 +1,5 @@
 const express = require('express')
-const { createNewCategory } = require('../Controllers/categoryController')
+const { createNewCategory, updateCategory, deleteCategory } = require('../Controllers/categoryController')
 const { roleCheckMiddleware, GetAllCategories } = require('../middleware/roleCheckMiddleware')
 
 const routee = express.Router()
@@ -8,8 +8,9 @@ const authMiddleware = require('../middleware/authMiddleware')
 
 const upload = multer()
 
-routee.post("/create", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), createNewCategory
-)
+routee.post("/create", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), createNewCategory)
+routee.patch("/:id/update", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), updateCategory)
+routee.delete("/:id/delete", authMiddleware, roleCheckMiddleware("admin"), deleteCategory)
 
 routee.get("/all",authMiddleware, GetAllCategories)
 

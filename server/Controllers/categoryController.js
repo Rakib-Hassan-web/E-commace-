@@ -26,8 +26,8 @@ const createNewCategory = async(req,res)=>{
         thumbnail:response.secure_url
        })
 
-       category.save()
-       sendSuccess(res, " Category created successfully", 201); 
+       await category.save()
+       sendSuccess(res, "Category created successfully", category, 201); 
 
 
     } catch (error) {
@@ -35,5 +35,49 @@ const createNewCategory = async(req,res)=>{
     }
 }
 
+const updateCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, slug, isActive } = req.body;
 
-module.exports={createNewCategory}
+        const existingCategory = await categorySchema.findById(id);
+        if (!existingCategory) return sendError(res, "Category not found", 404);
+
+        if (slug && slug !== existingCategory.slug) {
+            const slugExists = await categorySchema.findOne({ slug });
+            if (slugExists) return sendError(res, "Category slug already exists", 400);
+        }
+
+        if (name) existingCategory.name = name;
+        if (description !== undefined) existingCategory.description = description;
+        if (slug) existingCategory.slug = slug;
+        if (isActive !== undefined) existingCategory.isActive = isActive === true || isActive === "true";
+
+        if (req.file) {
+            const response = await uplodecloudinary(req.file, "thumbnail");
+            existingCategory.thumbnail = response.secure_url;
+        }
+
+        await existingCategory.save();
+        sendSuccess(res, "Category updated successfully", existingCategory, 200);
+    } catch (error) {
+        console.error("Update category error:", error);
+        sendError(res, "Server error", 500);
+    }
+};
+
+const deleteCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedCategory = await categorySchema.findByIdAndDelete(id);
+
+        if (!deletedCategory) return sendError(res, "Category not found", 404);
+
+        sendSuccess(res, "Category deleted successfully", null, 200);
+    } catch (error) {
+        console.error("Delete category error:", error);
+        sendError(res, "Server error", 500);
+    }
+};
+
+module.exports={createNewCategory, updateCategory, deleteCategory}

@@ -3,14 +3,21 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-import { useGetCategoriesQuery, useCreateCategoryMutation } from '@/app/dashboard/services/api'
+import {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
+} from '@/app/dashboard/services/api'
 
 export default function CategoriesPage() {
   const { data: fetchedCategories = [], refetch, isLoading: isFetching, error: fetchError } = useGetCategoriesQuery()
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation()
-
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation()
+  const [deleteCategoryMutation, { isLoading: isDeleting }] = useDeleteCategoryMutation()
 
   const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState(null)
 
   const [showAdd, setShowAdd] = useState(false);
 
@@ -18,6 +25,7 @@ export default function CategoriesPage() {
   const [newDescription, setNewDescription] = useState("");
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
+  const [formError, setFormError] = useState("");
 
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
@@ -56,7 +64,17 @@ export default function CategoriesPage() {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    setFormError("");
+
+    if (!newName.trim()) {
+      setFormError("Category name is required.");
+      return;
+    }
+
+    if (!newImageFile) {
+      setFormError("Please choose a category thumbnail image.");
+      return;
+    }
 
     const formData = new FormData()
     formData.append('name', newName.trim())
@@ -67,15 +85,16 @@ export default function CategoriesPage() {
 
     try {
       await createCategory(formData).unwrap()
-      // clear local form — list will refresh due to invalidatesTags
+      await refetch()
       setNewName("")
       setNewDescription("")
       setNewImageFile(null)
       setNewImagePreview("")
       setShowAdd(false)
     } catch (err) {
-      console.error("Create category failed", err)
-      // optionally show UI feedback here
+      const message = err?.data?.message || err?.error || "Unable to create category right now.";
+      setFormError(message);
+      console.error("Create category failed", err);
     }
   }
 
@@ -95,15 +114,26 @@ export default function CategoriesPage() {
     setEditImagePreview(url);
   };
 
-  const saveEdit = (id) => {
-    setCategories((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, name: editName, description: editDescription, image: editImagePreview } : c))
-    );
-    setEditingId(null);
-    setEditName("");
-    setEditDescription("");
-    setEditImageFile(null);
-    setEditImagePreview("");
+  const saveEdit = async (id) => {
+    if (!editName.trim()) return;
+
+    const formData = new FormData();
+    formData.append("name", editName.trim());
+    formData.append("description", editDescription.trim());
+    formData.append("slug", editName.trim().toLowerCase().replace(/\s+/g, "-"));
+    if (editImageFile) formData.append("thumbnail", editImageFile);
+
+    try {
+      await updateCategory({ id, formData }).unwrap();
+      await refetch();
+      setEditingId(null);
+      setEditName("");
+      setEditDescription("");
+      setEditImageFile(null);
+      setEditImagePreview("");
+    } catch (err) {
+      console.error("Update category failed", err);
+    }
   };
 
   const cancelEdit = () => {
@@ -114,9 +144,16 @@ export default function CategoriesPage() {
     setEditImagePreview("");
   };
 
-  const deleteCategory = (id) => {
+  const deleteCategory = async (id) => {
     if (!confirm("Delete this category?")) return;
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+
+    try {
+      await deleteCategoryMutation(id).unwrap();
+      await refetch();
+      if (selectedCategory?.id === id) setSelectedCategory(null);
+    } catch (err) {
+      console.error("Delete category failed", err);
+    }
   };
 
   return (
@@ -141,8 +178,15 @@ export default function CategoriesPage() {
               </div>
             </div>
 
+            {fetchError && (
+              <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                Failed to load categories.
+              </div>
+            )}
+
             {showAdd && (
               <form onSubmit={handleAdd} className="bg-white shadow rounded-lg p-4 mb-6 grid grid-cols-3 gap-4">
+                {formError && <p className="col-span-3 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">{formError}</p>}
                 <div className="col-span-2">
                   <input
                     value={newName}
@@ -172,8 +216,8 @@ export default function CategoriesPage() {
                   <input type="file" accept="image/*" onChange={handleNewImage} />
 
                   <div className="mt-auto w-full flex gap-2">
-                    <button type="submit" className="bg-indigo-600 text-white px-3 py-2 rounded">
-                      Save
+                    <button type="submit" disabled={isCreating} className="bg-indigo-600 text-white px-3 py-2 rounded disabled:opacity-60">
+                      {isCreating ? "Saving..." : "Save"}
                     </button>
                     <button type="button" onClick={() => setShowAdd(false)} className="border px-3 py-2 rounded">
                       Cancel
@@ -183,9 +227,10 @@ export default function CategoriesPage() {
               </form>
             )}
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="grid gap-6 lg:grid-cols-[2fr_1fr] mb-6">
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase">ID</th>
@@ -197,6 +242,11 @@ export default function CategoriesPage() {
                   </thead>
 
                   <tbody className="bg-white divide-y divide-gray-100">
+                    {isFetching && (
+                      <tr>
+                        <td colSpan={5} className="p-4 text-center text-gray-500">Loading categories...</td>
+                      </tr>
+                    )}
                     {categories.map((cat) => (
                       <tr key={cat.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-700">{cat.id}</td>
@@ -249,11 +299,14 @@ export default function CategoriesPage() {
                             </>
                           ) : (
                             <>
+                              <button onClick={() => setSelectedCategory(cat)} className="text-blue-600 hover:underline mr-3">
+                                Details
+                              </button>
                               <button onClick={() => startEdit(cat)} className="text-indigo-600 hover:underline mr-3">
                                 Edit
                               </button>
                               <button onClick={() => deleteCategory(cat.id)} className="text-red-600 hover:underline">
-                                Delete
+                                {isDeleting ? "Deleting..." : "Delete"}
                               </button>
                             </>
                           )}
@@ -261,7 +314,7 @@ export default function CategoriesPage() {
                       </tr>
                     ))}
 
-                    {categories.length === 0 && (
+                    {!isFetching && categories.length === 0 && (
                       <tr>
                         <td colSpan={5} className="p-4 text-center text-gray-500">
                           No categories
@@ -270,7 +323,37 @@ export default function CategoriesPage() {
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
+
+              <aside className="bg-white shadow rounded-lg p-5 h-fit">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Category Details</h2>
+                {selectedCategory ? (
+                  <div className="space-y-4 text-sm text-gray-700">
+                    <div className="rounded-xl border border-gray-200 p-3">
+                      <img src={selectedCategory.image || ""} alt={selectedCategory.name} className="h-32 w-full rounded-lg object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Name</p>
+                      <p className="text-base font-semibold text-gray-900">{selectedCategory.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Description</p>
+                      <p>{selectedCategory.description || "No description provided."}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500">ID</p>
+                      <p className="break-all">{selectedCategory.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Slug</p>
+                      <p>{selectedCategory.raw?.slug || "—"}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">Select a category to see its details.</p>
+                )}
+              </aside>
             </div>
           </main>
         </div>

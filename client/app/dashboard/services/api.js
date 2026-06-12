@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:8000",
+  baseUrl: "/api/",
   credentials: "include",
 });
 
@@ -33,7 +33,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const AdminAPI = createApi({
   reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes:["product" ,"Categories" ,],
+  tagTypes:["product", "Categories"],
   
   endpoints: (builder) => ({
     getProduct: builder.query({
@@ -54,7 +54,22 @@ export const AdminAPI = createApi({
         method: "POST",
         body: formData,
       }),
-      providesTags:["Categories"]
+      invalidatesTags: ["Categories"],
+    }),
+    updateCategory: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `category/${id}/update`,
+        method: "PATCH",
+        body: formData,
+      }),
+      invalidatesTags: ["Categories"],
+    }),
+    deleteCategory: builder.mutation({
+      query: (id) => ({
+        url: `category/${id}/delete`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Categories"],
     }),
     createProduct: builder.mutation({
     query: (formData) => ({
@@ -67,4 +82,11 @@ export const AdminAPI = createApi({
   }),
 });
 
-export const { useGetProductQuery, useGetCategoriesQuery, useCreateCategoryMutation ,useCreateProductMutation } = AdminAPI;
+export const {
+  useGetProductQuery,
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
+  useCreateProductMutation,
+} = AdminAPI;
