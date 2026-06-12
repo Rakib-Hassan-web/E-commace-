@@ -6,7 +6,10 @@ const routee = express.Router()
 const multer  = require('multer')
 const authMiddleware = require('../middleware/authMiddleware')
 
-const upload = multer()
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+})
 
 routee.post("/create", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), createNewCategory)
 routee.patch("/:id/update", authMiddleware, roleCheckMiddleware("admin"), upload.single("thumbnail"), updateCategory)

@@ -2,43 +2,54 @@ const categorySchema = require("../models/categorySchema")
 const { uplodecloudinary } = require("../services/cloudinaryServices")
 const { sendSuccess, sendError } = require("../services/responseHandler")
 
+const isValidImageFile = (file) => {
+    if (!file) return false;
+    return Boolean(file.buffer?.length) && /^image\//.test(file.mimetype || "");
+};
 
 const createNewCategory = async(req,res)=>{
     try {
-        const {name ,description,slug} = req.body
+        const name = (req.body.name || "").trim();
+        const description = (req.body.description || "").trim();
+        const slug = (req.body.slug || name).toLowerCase().trim().replace(/\s+/g, "-");
 
+        if (!name) return sendError(res, "Category name is required", 400);
+        if (!slug) return sendError(res, "Slug is required", 400);
+        if (!isValidImageFile(req.file)) return sendError(res, "Please upload a valid image file (jpg, png, webp).", 400);
 
-        if(!name) return  sendError(res , " Category name is required" ,400)
-        if(!slug) return  sendError(res , " slug is required" ,400)
-        if(!req.file) return  sendError(res , "Category thumbnail is required" ,400)
+        const existingCategoryslug = await categorySchema.findOne({ slug });
+        if (existingCategoryslug) return sendError(res, "Category already exists", 400);
 
+        let response;
+        try {
+            response = await uplodecloudinary(req.file, "thumbnail");
+        } catch (uploadError) {
+            console.error("Category image upload failed", uploadError);
+            return sendError(res, "Image upload failed. Please use a valid image file.", 400);
+        }
 
-        const existingCategoryslug = await categorySchema.findOne({slug})
-        if(existingCategoryslug)  return sendError(res, "Category already exists", 400); 
+        const category = new categorySchema({
+            name,
+            description,
+            slug,
+            thumbnail: response?.secure_url,
+        });
 
-
-     const response =await uplodecloudinary(req.file ,"thumbnail")
-
-       const  category = new categorySchema({
-        name,
-        description,
-        slug,
-        thumbnail:response.secure_url
-       })
-
-       await category.save()
-       sendSuccess(res, "Category created successfully", category, 201); 
-
-
+        await category.save();
+        return sendSuccess(res, "Category created successfully", category, 201);
     } catch (error) {
-         sendError(res, "Server error", 500);
+        console.error("Create category error:", error);
+        return sendError(res, "Server error", 500);
     }
-}
+};
 
 const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, slug, isActive } = req.body;
+        const name = (req.body.name || "").trim();
+        const description = (req.body.description || "").trim();
+        const slug = (req.body.slug || "").trim().toLowerCase().replace(/\s+/g, "-");
+        const { isActive } = req.body;
 
         const existingCategory = await categorySchema.findById(id);
         if (!existingCategory) return sendError(res, "Category not found", 404);
@@ -54,15 +65,23 @@ const updateCategory = async (req, res) => {
         if (isActive !== undefined) existingCategory.isActive = isActive === true || isActive === "true";
 
         if (req.file) {
-            const response = await uplodecloudinary(req.file, "thumbnail");
-            existingCategory.thumbnail = response.secure_url;
+            if (!isValidImageFile(req.file)) {
+                return sendError(res, "Please upload a valid image file (jpg, png, webp).", 400);
+            }
+            try {
+                const response = await uplodecloudinary(req.file, "thumbnail");
+                existingCategory.thumbnail = response?.secure_url;
+            } catch (uploadError) {
+                console.error("Update category image upload failed", uploadError);
+                return sendError(res, "Image upload failed. Please use a valid image file.", 400);
+            }
         }
 
         await existingCategory.save();
-        sendSuccess(res, "Category updated successfully", existingCategory, 200);
+        return sendSuccess(res, "Category updated successfully", existingCategory, 200);
     } catch (error) {
         console.error("Update category error:", error);
-        sendError(res, "Server error", 500);
+        return sendError(res, "Server error", 500);
     }
 };
 

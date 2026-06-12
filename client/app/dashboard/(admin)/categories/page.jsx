@@ -213,7 +213,7 @@ export default function CategoriesPage() {
                     )}
                   </div>
 
-                  <input type="file" accept="image/*" onChange={handleNewImage} />
+                  <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" onChange={handleNewImage} />
 
                   <div className="mt-auto w-full flex gap-2">
                     <button type="submit" disabled={isCreating} className="bg-indigo-600 text-white px-3 py-2 rounded disabled:opacity-60">
@@ -283,7 +283,7 @@ export default function CategoriesPage() {
                           </div>
 
                           {editingId === cat.id && (
-                            <input type="file" accept="image/*" onChange={handleEditImage} className="mt-1 text-xs" />
+                            <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" onChange={handleEditImage} className="mt-1 text-xs" />
                           )}
                         </td>
 
