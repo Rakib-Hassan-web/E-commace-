@@ -1,9 +1,8 @@
 import React from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { apiClient } from "@/lib/apiClient";
 import PaginatedProducts from "@/app/(e-commerce)/component/PaginatedProducts";
 import AddToCartButton from "@/app/(e-commerce)/component/AddToCartButton";
+import ProductImageSlider from "./ProductImageSlider";
 
 const ProductPage = async ({ params }) => {
   const { slug } = params;
@@ -31,26 +30,13 @@ const ProductPage = async ({ params }) => {
   })
 
   return (
-    <main className="container mx-auto py-10">
-      <div className="flex flex-col md:flex-row gap-8">
+    <main className="container mx-auto py-10 pt-30">
+      <div className="flex flex-col md:flex-row gap-8 pt-30">
         <div className="w-full md:w-1/2">
-          <div className="bg-gray-100 rounded-md p-4 flex items-center justify-center">
-            <img
-              src={product.thumbnail}
-              alt={product.title}
-              className="object-contain max-h-[400px]"
-            />
-          </div>
-
-          {product.images && product.images.length > 0 && (
-            <div className="mt-4 flex gap-2 overflow-x-auto">
-              {product.images.map((img, i) => (
-                <div key={i} className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
-                  <img src={img} alt={`${product.title}-${i}`} className="object-contain w-full h-full" />
-                </div>
-              ))}
-            </div>
-          )}
+          <ProductImageSlider
+            images={[product.thumbnail, ...(product.images || [])]}
+            title={product.title}
+          />
         </div>
 
         <div className="w-full md:w-1/2">

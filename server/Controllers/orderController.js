@@ -2,7 +2,7 @@ const cartSchema = require("../models/cartSchema");
 const orderSchema = require("../models/orderSchema");
 const Order = require("../models/orderSchema");
 const { sendError, sendSuccess } = require("../services/responseHandler");
-const stripe = require('stripe')(process.env.STRIPE_SEC);
+const stripe = process.env.STRIPE_SEC ? require('stripe')(process.env.STRIPE_SEC) : null;
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 
@@ -91,6 +91,10 @@ const checkOut = async (req, res) => {
       };
     });
 
+    if (!stripe) {
+      return sendError(res, "Stripe payment is not configured", 500);
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items,
@@ -123,6 +127,10 @@ const checkOut = async (req, res) => {
 const webhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];
   let event;
+
+  if (!stripe || !endpointSecret) {
+    return sendError(res, "Stripe webhook is not configured", 500);
+  }
 
   try {
     event = stripe.webhooks.constructEvent(

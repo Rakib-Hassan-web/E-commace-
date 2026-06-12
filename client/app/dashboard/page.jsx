@@ -21,19 +21,27 @@ export default async function DashboardPage() {
     return redirect("/Login");
   }
 
-  const metrics = [
-    { id: 1, title: "Total Orders", value: 1240, color: "bg-indigo-500" },
-    { id: 2, title: "Revenue", value: "$76,540", color: "bg-green-500" },
-    { id: 3, title: "Users", value: 860, color: "bg-yellow-500" },
-    { id: 4, title: "Products", value: 320, color: "bg-pink-500" },
-  ];
+  let metrics = [];
+  let recentOrders = [];
 
-  const recentOrders = [
-    { id: "ORD-1001", customer: "Alice Johnson", date: "2026-04-20", total: "$120.00", status: "Delivered" },
-    { id: "ORD-1002", customer: "Mark Peterson", date: "2026-04-21", total: "$59.99", status: "Processing" },
-    { id: "ORD-1003", customer: "Lucy Smith", date: "2026-04-21", total: "$230.00", status: "Shipped" },
-    { id: "ORD-1004", customer: "John Williams", date: "2026-04-22", total: "$15.00", status: "Cancelled" },
-  ];
+  try {
+    const res = await fetch("/api/dashboard/overview", {
+      headers: {
+        cookie: `X-AS-Token=${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to load dashboard overview");
+    }
+
+    const response = await res.json();
+    metrics = response?.data?.metrics || [];
+    recentOrders = response?.data?.recentOrders || [];
+  } catch (error) {
+    console.error("Dashboard overview fetch failed:", error);
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">

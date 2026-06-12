@@ -7,7 +7,6 @@ import { useGetProductQuery } from "@/app/dashboard/services/api";
 
 export default function AllProducts() {
   const { data, error, isLoading } = useGetProductQuery();
-  // AdminAPI transformResponse returns an array
   const products = Array.isArray(data) ? data : data?.product || [];
 
   return (

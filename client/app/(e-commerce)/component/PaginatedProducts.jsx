@@ -32,8 +32,8 @@ export default function PaginatedProducts({ initialPage = 1, limit = 4 }) {
 
   return (
     <div>
-      <h2 className="font-aby font-normal text-[28px] sm:text-[36px] md:text-[42px] text-[#1A0B5B] text-center mb-6">
-        Related Products
+      <h2 className="font-aby font-normal mt-30 text-[28px] sm:text-[36px] md:text-[42px] text-[#1A0B5B] text-center mb-6">
+        All Products
       </h2>
 
       {loading ? (
