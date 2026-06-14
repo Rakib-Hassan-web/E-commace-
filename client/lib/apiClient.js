@@ -1,14 +1,13 @@
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000";
 
 async function request(
   endpoint,
   {
     method = "GET",
     body,
-    headers = {}, 
-    revalidate, 
-    tags = [], 
+    headers = {},
+    revalidate,
+    tags = [],
   } = {},
 ) {
   const config = {
@@ -19,7 +18,7 @@ async function request(
     },
     credentials: "include",
 
-   
+
     next: {},
   };
 

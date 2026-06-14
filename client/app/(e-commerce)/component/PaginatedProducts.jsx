@@ -14,8 +14,7 @@ export default function PaginatedProducts({ initialPage = 1, limit = 4 }) {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    apiClient
-      .get(`/product/allProducts?page=${page}&limit=${limit}`)
+    apiClient.get(`/product/allProducts?page=${page}&limit=${limit}`)
       .then((res) => {
         const data = res?.data;
         if (!mounted) return;
