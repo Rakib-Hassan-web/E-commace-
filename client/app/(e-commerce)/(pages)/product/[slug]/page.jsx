@@ -5,7 +5,7 @@ import AddToCartButton from "@/app/(e-commerce)/component/AddToCartButton";
 import ProductImageSlider from "./ProductImageSlider";
 
 const ProductPage = async ({ params }) => {
-  const { slug } = params;
+  const { slug } = await params;
   let product = null;
 
   try {
