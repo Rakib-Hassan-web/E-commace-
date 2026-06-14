@@ -3,23 +3,8 @@ import Sidebar from "./(admin)/components/Sidebar";
 import Navbar from "./(admin)/components/Navbar";
 import DashboardCard from "./(admin)/components/DashboardCard";
 import RecentOrdersTable from "./(admin)/components/RecentOrdersTable";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { jwtVerify } from "jose";
 
 export default async function DashboardPage() {
-  // server-side auth check: ensure user has admin/editor role
-  const token = cookies().get("X-AS-Token")?.value;
-  if (!token) return redirect("/Login");
-
-  try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-    if (!["admin", "editor"].includes(payload.role)) {
-      return redirect("/Login");
-    }
-  } catch (err) {
-    return redirect("/Login");
-  }
 
   let metrics = [];
   let recentOrders = [];
