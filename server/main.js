@@ -33,6 +33,11 @@ cloudinaryConfig()
 // ---------------routes--------------
 app.use(routee)
 
-app.listen(8000, () => {
-  console.log("Server is running on port 8000")
-})
+// ------------------- Server Listener 
+if (process.env.NODE_ENV !== "production") {
+  app.listen(8000, () => {
+    console.log('Server Is Running')
+  })
+}
+
+module.exports = app
