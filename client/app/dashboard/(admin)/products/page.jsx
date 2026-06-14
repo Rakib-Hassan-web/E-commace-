@@ -6,7 +6,29 @@ import Button from "@/utils/Button";
 import Input from "@/utils/Input";
 import Image from "next/image";
 import { generateSlug } from "@/utils/sluggenerator";
-import {  useCreateProductMutation, useGetCategoriesQuery } from "../../services/api";
+import Link from "next/link";
+import toast from "react-hot-toast";
+import { useCreateProductMutation, useGetCategoriesQuery, useGetProductQuery, useDeleteProductMutation } from "../../services/api";
+
+function DeleteButton({ slug }) {
+  const [deleteProduct, { isLoading }] = useDeleteProductMutation();
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await deleteProduct(slug).unwrap();
+      toast.success("Product deleted");
+    } catch (err) {
+      toast.error(err?.data?.message || "Delete failed");
+    }
+  };
+
+  return (
+    <button onClick={handleDelete} className="text-red-500">
+      {isLoading ? "Deleting..." : "Delete"}
+    </button>
+  );
+}
 
 
 export default function ProductsPage() {
@@ -18,7 +40,7 @@ export default function ProductsPage() {
 
   
 const [variants, setVariants] = useState([]);
-const [products, setProducts] = useState([]);
+const { data: products = [], isLoading: productsLoading } = useGetProductQuery();
 
 const [newProduct, setNewProduct] = useState({
 title: "",
@@ -30,6 +52,7 @@ discountPercentage: "",
 tags: "",
 thumbnail: null,
 images:[]
+ ,variants:[]
 });
 
 
@@ -40,16 +63,19 @@ handelAddNewVariant();
 
 
 const handelAddNewVariant = () => {
-setVariants((prev) => [
-...prev,
-{
-id: Date.now(),
-sku: `HETKO-${Math.floor(Math.random() * 100)}`,
-color: "",
-size: "m",
-stock: "",
-},
-]);
+  const newV = {
+    id: Date.now(),
+    sku: `HETKO-${Date.now().toString(36)}-${Math.floor(Math.random() * 10000)}`,
+    color: "",
+    size: "m",
+    stock: "",
+  };
+
+  setVariants((prev) => {
+    const next = [...prev, newV];
+    setNewProduct((p) => ({ ...p, variants: next }));
+    return next;
+  });
 };
 
   const handelCancleVariant = (id) => {
@@ -61,12 +87,7 @@ stock: "",
   };
 
   const handelInputVariant = (id, field, value) => {
-    let variantInputChange = variants.map((item) => {
-      if (item.id == id) {
-        item[field] = value;
-      }
-      return item;
-    });
+    const variantInputChange = variants.map((item) => (item.id == id ? { ...item, [field]: value } : item));
     setVariants(variantInputChange);
     setNewProduct((prev) => ({ ...prev, variants: variantInputChange }));
   };
@@ -118,32 +139,68 @@ const imgs = newProduct.images.filter((item, idx) => idx !== i && item);
 setNewProduct((prev) => ({ ...prev, images: imgs }));
 };
 
+  const buildFormData = (product, overrideSlug) => {
+    const formData = new FormData();
+    formData.append("title", product.title || "");
+    formData.append("slug", (overrideSlug ?? product.slug) || "");
+    formData.append("description", product.description || "");
+    formData.append("category", product.category || "");
+    formData.append("price", product.price || "");
+    formData.append("discountPercentage", product.discountPercentage || 0);
+
+    const tagsArr = typeof product.tags === "string" ? product.tags.split(",").map((t) => t.trim()).filter(Boolean) : (Array.isArray(product.tags) ? product.tags : []);
+    tagsArr.forEach((t) => formData.append("tags", t));
+
+    const variantsToSend = (product.variants || []).map(({ sku, color, size, stock }) => ({ sku, color, size, stock }));
+    formData.append("variants", JSON.stringify(variantsToSend));
+
+    if (product.thumbnail) formData.append("thumbnail", product.thumbnail);
+    (product.images || []).forEach((file) => formData.append("images", file));
+
+    return formData;
+  };
+
 
   const handelNewProduct = async (e) => {
     e.preventDefault();
-    
-    const formData = new FormData();
-    
-    for (const items in newProduct) {
-      if (items == "variants") {
-       newProduct.variants.forEach((item) => {
-          formData.append("variants", item);
-        });
+    // build initial FormData
+    const formData = buildFormData(newProduct);
 
-      } else if (items == "images") {
-        newProduct.images.forEach((file) => {
-          formData.append("images", file);
-        });
-      } else {
-        formData.append(items, newProduct[items]);
+    try {
+      const res = await createNewProduct(formData).unwrap();
+      toast.success(res?.message || "Product created");
+      // reset form
+      setNewProduct({ title: "", slug: "", description: "", category: "", price: "", discountPercentage: "", tags: "", thumbnail: null, images: [], variants: [] });
+      setVariants([]);
+      handelAddNewVariant();
+      return;
+    } catch (err) {
+      const message = (err?.data?.message || err?.error || "Create product failed").toString();
+
+      // retry once if slug already exists
+      if (message.toLowerCase().includes("slug") || message.toLowerCase().includes("already exists")) {
+        const baseSlug = newProduct.slug || generateSlug(newProduct.title || "product");
+        const newSlug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+        const retryFd = buildFormData(newProduct, newSlug);
+        try {
+          const res2 = await createNewProduct(retryFd).unwrap();
+          toast.success(res2?.message || "Product created");
+          // reset and set new slug
+          setNewProduct({ title: "", slug: "", description: "", category: "", price: "", discountPercentage: "", tags: "", thumbnail: null, images: [], variants: [] });
+          setVariants([]);
+          handelAddNewVariant();
+          return;
+        } catch (err2) {
+          const message2 = err2?.data?.message || err2?.error || "Create product failed";
+          toast.error(message2);
+          console.error(err2);
+          return;
+        }
       }
+
+      toast.error(message);
+      console.error(err);
     }
-    const res = await createNewProduct(formData);
-    console.log(res);
-    if (isError) {
-      toast.error(res.message);
-    }
-    toast.success(res.message);
   };
 
 return (
@@ -391,7 +448,7 @@ return (
                       placeholder="Color"
                     />
 
-                    <select
+                    {/* <select
                       value={vitem.size}
                       onChange={(e) =>
                         handelInputVariant(vitem.id, "size", e.target.value)
@@ -403,7 +460,7 @@ return (
                           {size.toUpperCase()}
                         </option>
                       ))}
-                    </select>
+                    </select> */}
 
                     <input
                       value={vitem.stock}
@@ -435,57 +492,61 @@ return (
             </form>
           </section>
 
-          {/* ===== TABLE ===== */}
-          {products.length > 0 && (
-            <section className="mt-5 bg-white p-5 rounded-3xl shadow-sm overflow-x-auto">
-              <h2 className="font-semibold mb-4">Product List</h2>
+                  {/* ===== TABLE ===== */}
+                  <section className="mt-5 bg-white p-5 rounded-3xl shadow-sm overflow-x-auto">
+                    <h2 className="font-semibold mb-4">Product List</h2>
 
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th>Image</th>
-                    <th>Title</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
 
-                <tbody>
-                  {products.map((item) => {
-                    const totalStock = item.variants.reduce(
-                      (acc, v) => acc + Number(v.stock || 0),
-                      0
-                    );
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left">
+                          <th>Image</th>
+                          <th>Title</th>
+                          <th>Price</th>
+                          <th>Stock</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
 
-                    return (
-                      <tr key={item.id} className="border-b">
-                        <td className="py-2">
-                          {item.thumbnail ? (
-                            <img
-                              src={item.thumbnail}
-                              className="w-14 h-14 object-cover rounded"
-                            />
-                          ) : (
-                            "No Image"
-                          )}
-                        </td>
+                      <tbody>
+                        {(products || []).map((item) => {
+                          const totalStock = (item.variants || []).reduce(
+                            (acc, v) => acc + Number(v.stock || 0),
+                            0
+                          );
 
-                        <td>{item.title}</td>
-                        <td>৳ {item.price}</td>
-                        <td>{totalStock}</td>
+                          return (
+                            <tr key={item._id || item.slug} className="border-b">
+                              <td className="py-2">
+                                {item.thumbnail ? (
+                                  <img
+                                    src={item.thumbnail}
+                                    className="w-14 h-14 object-cover rounded"
+                                  />
+                                ) : (
+                                  "No Image"
+                                )}
+                              </td>
 
-                        <td className="space-x-2">
-                          <button className="text-blue-500">Edit</button>
-                          <button className="text-red-500">Delete</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </section>
-          )}
+                              <td>{item.title}</td>
+                              <td>৳ {item.price}</td>
+                              <td>{totalStock}</td>
+
+                              <td className="space-x-2">
+                                <Link
+                                  href={`/dashboard/products/${item.slug}`}
+                                  className="text-blue-500"
+                                >
+                                  Edit
+                                </Link>
+                                <DeleteButton slug={item.slug} />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </section>
         </main>
       </div>
     </div>

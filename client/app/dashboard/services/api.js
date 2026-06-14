@@ -114,6 +114,34 @@ export const AdminAPI = createApi({
     }),
 
 
+    // get single product details
+    getSingleProduct: builder.query({
+      query: (slug) => `product/${slug}`,
+      transformResponse: (response) => response?.data || response || {},
+      providesTags: (result, error, arg) => [{ type: "product", id: arg }],
+    }),
+
+
+    updateProduct: builder.mutation({
+      query: ({ slug, body }) => ({
+        url: `product/update/${slug}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["product"],
+    }),
+
+    deleteProduct: builder.mutation({
+      // soft-delete via isActive flag
+      query: (slug) => ({
+        url: `product/update/${slug}`,
+        method: "PUT",
+        body: { isActive: "false" },
+      }),
+      invalidatesTags: ["product"],
+    }),
+
+
 
     createCategory: builder.mutation({
 
@@ -177,6 +205,10 @@ export const {
 
   useCreateProductMutation,
 
+  useGetSingleProductQuery,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+
   useGetUsersQuery,
 
   useGetCategoriesQuery,
@@ -188,4 +220,4 @@ export const {
   useDeleteCategoryMutation,
 
 
-} = AdminAPI;
+} = AdminAPI
