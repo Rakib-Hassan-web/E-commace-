@@ -10,7 +10,7 @@ export default async function fetchWithRefresh(url, options = {}, retry = true) 
 
   // Try to refresh access token using refresh token cookie
   try {
-    const refreshRes = await fetch("/api/auth/refreshaccesstoken", {
+    const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/refreshaccesstoken`, {
       method: "POST",
       credentials: "include",
     });

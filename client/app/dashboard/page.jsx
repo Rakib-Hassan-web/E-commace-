@@ -10,7 +10,7 @@ export default async function DashboardPage() {
   let recentOrders = [];
 
   try {
-    const res = await fetch("/api/dashboard/overview", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/overview`, {
       headers: {
         cookie: `X-AS-Token=${token}`,
       },

@@ -21,7 +21,7 @@ app.use(cookieParser())
 const allowedClientOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:3000",
-  "http://localhost:3001",
+  "https://e-commace.vercel.app",
 ].filter(Boolean);
 
 app.use(

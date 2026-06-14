@@ -1,8 +1,3 @@
-
-
-
-// app/layout.js
-
 import Navbar from "./(e-commerce)/component/Navbar";
 import "./globals.css";
 import { Providers } from "@/app/Providers";

@@ -1,7 +1,7 @@
 import fetchWithRefresh from "@/utils/fetchWithRefresh";
 
 export async function registerUser(userData) {
-  const res = await fetchWithRefresh("/api/auth/registration", {
+  const res = await fetchWithRefresh(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/registration`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(userData),
@@ -11,7 +11,7 @@ export async function registerUser(userData) {
 }
 
 export async function loginUser(credentials) {
-  const res = await fetchWithRefresh("/api/auth/login", {
+  const res = await fetchWithRefresh(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -22,7 +22,7 @@ export async function loginUser(credentials) {
 }
 
 export async function verifyOtp({ email, otp }) {
-  const res = await fetchWithRefresh("/api/auth/verifyotp", {
+  const res = await fetchWithRefresh(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/verifyotp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, otp }),
@@ -32,7 +32,7 @@ export async function verifyOtp({ email, otp }) {
 }
 
 export async function resendOtp({ email }) {
-  const res = await fetchWithRefresh("/api/auth/resendotp", {
+  const res = await fetchWithRefresh(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/resendotp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),

@@ -27,7 +27,7 @@ const ResendOTPPage = () => {
     }
 
     try {
-      const res = await fetchWithRefresh("/api/auth/resendotp", {
+      const res = await fetchWithRefresh(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/resendotp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
