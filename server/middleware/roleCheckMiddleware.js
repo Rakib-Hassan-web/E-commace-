@@ -1,6 +1,8 @@
 const categorySchema = require("../models/categorySchema")
 
-// 
+// ------------role checker---------------
+const roleCheckMiddleware =(...roles)=>{
+   try {
      return(req,res,next)=>{
         
         if(roles.includes(req.user.role)){
