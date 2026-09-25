@@ -9,8 +9,8 @@ const roleCheckMiddleware =(...roles)=>{
             return next()
         }
 
-         res.status(400).send({message:"invalid request"})
-    }
+   
+        
 
 }
 
