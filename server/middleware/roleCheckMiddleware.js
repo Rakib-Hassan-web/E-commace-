@@ -11,9 +11,7 @@ const roleCheckMiddleware =(...roles)=>{
 
          res.status(400).send({message:"invalid request"})
     }
-   } catch (error) {
-    res.status(500).send({message:"server error"})
-   }
+
 }
 
 const GetAllCategories = async(req,res)=>{
