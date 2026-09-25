@@ -8,7 +8,16 @@ const { verifytoken } = require("../services/helpers")
     if(!token) return res.status(401).send({message : "Invalid Request"})
     const decoded = verifytoken(token)
 
-
+    if(!decoded) return res.status(401).send({message : "Invalid Request"})
+  
+        req.user =decoded
+        next()
+            
+        } catch (error) {
+            res.status(401).send({message : "Internal Server Error"})
+        }
+    }
+  
 
 
 
